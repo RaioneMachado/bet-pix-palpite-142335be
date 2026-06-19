@@ -3,25 +3,47 @@
  * Documentação: https://docs.asaas.com/
  */
 
-const ENV = process.env.ASAAS_ENV?.toLowerCase() === "production" ? "production" : "sandbox";
+function getEnv(): "production" | "sandbox" {
+  return process.env.ASAAS_ENV?.toLowerCase() === "production" ? "production" : "sandbox";
+}
 
-const BASE_URL =
-  ENV === "production"
+function getBaseUrl(): string {
+  return getEnv() === "production"
     ? "https://api.asaas.com/v3"
     : "https://api-sandbox.asaas.com/v3";
+}
 
 function getApiKey(): string {
-  const key = process.env.ASAAS_API_KEY;
-  if (!key) throw new Error("ASAAS_API_KEY não configurado");
+  const key = process.env.ASAAS_API_KEY?.trim();
+  if (!key || key.length < 10) {
+    throw new Error(
+      "ASAAS_API_KEY não configurado ou inválido. Verifique o secret no painel do Lovable Cloud.",
+    );
+  }
   return key;
 }
 
 async function asaasFetch<T = any>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const env = getEnv();
+  const baseUrl = getBaseUrl();
+  const apiKey = getApiKey();
+
+  // Debug temporário — não expõe a chave completa
+  console.log("[Asaas] request", {
+    env,
+    baseUrl,
+    path,
+    method: init.method ?? "GET",
+    apiKeyPresent: true,
+    apiKeyPrefix: apiKey.slice(0, 6),
+    apiKeyLength: apiKey.length,
+  });
+
+  const res = await fetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      access_token: getApiKey(),
+      access_token: apiKey,
       ...(init.headers ?? {}),
     },
   });
@@ -33,7 +55,7 @@ async function asaasFetch<T = any>(path: string, init: RequestInit = {}): Promis
     /* not json */
   }
   if (!res.ok) {
-    console.error("[Asaas] erro", res.status, text);
+    console.error("[Asaas] erro", { status: res.status, env, baseUrl, path, body: text });
     throw new Error(
       `Asaas ${res.status}: ${json?.errors?.[0]?.description ?? text ?? "erro desconhecido"}`,
     );
@@ -109,4 +131,4 @@ export async function getPayment(paymentId: string): Promise<AsaasPayment> {
   return asaasFetch<AsaasPayment>(`/payments/${paymentId}`);
 }
 
-export const ASAAS_ENV_NAME = ENV;
+export const ASAAS_ENV_NAME = getEnv();
