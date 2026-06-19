@@ -131,4 +131,4 @@ export async function getPayment(paymentId: string): Promise<AsaasPayment> {
   return asaasFetch<AsaasPayment>(`/payments/${paymentId}`);
 }
 
-export const ASAAS_ENV_NAME = ENV;
+export const ASAAS_ENV_NAME = getEnv();
