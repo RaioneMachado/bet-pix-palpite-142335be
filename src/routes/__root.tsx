@@ -77,19 +77,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Bolão Brasil x Escócia — Acerte o placar e ganhe até R$ 1.000" },
+      {
+        name: "description",
+        content:
+          "Faça sua aposta no placar de Brasil x Escócia. Pagamento via PIX, R$ 20,00 por palpite. Concorra a até R$ 1.000,00.",
+      },
+      { property: "og:title", content: "Bolão Brasil x Escócia" },
+      {
+        property: "og:description",
+        content: "Acerte o placar e concorra ao prêmio. Aposte por R$ 20,00 via PIX.",
+      },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: appCss,
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap",
       },
     ],
   }),
