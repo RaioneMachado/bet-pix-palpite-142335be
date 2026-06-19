@@ -14,16 +14,97 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bets: {
+        Row: {
+          asaas_customer_id: string | null
+          created_at: string
+          id: string
+          name: string
+          paid_at: string | null
+          payment_id: string | null
+          payment_status: Database["public"]["Enums"]["bet_payment_status"]
+          pix_copy_paste: string | null
+          pix_expires_at: string | null
+          pix_qr_code: string | null
+          score_brazil: number
+          score_scotland: number
+          updated_at: string
+          value: number
+          whatsapp: string
+        }
+        Insert: {
+          asaas_customer_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          paid_at?: string | null
+          payment_id?: string | null
+          payment_status?: Database["public"]["Enums"]["bet_payment_status"]
+          pix_copy_paste?: string | null
+          pix_expires_at?: string | null
+          pix_qr_code?: string | null
+          score_brazil: number
+          score_scotland: number
+          updated_at?: string
+          value?: number
+          whatsapp: string
+        }
+        Update: {
+          asaas_customer_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          payment_status?: Database["public"]["Enums"]["bet_payment_status"]
+          pix_copy_paste?: string | null
+          pix_expires_at?: string | null
+          pix_qr_code?: string | null
+          score_brazil?: number
+          score_scotland?: number
+          updated_at?: string
+          value?: number
+          whatsapp?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin"
+      bet_payment_status: "pending" | "confirmed" | "expired" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +231,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin"],
+      bet_payment_status: ["pending", "confirmed", "expired", "cancelled"],
+    },
   },
 } as const
