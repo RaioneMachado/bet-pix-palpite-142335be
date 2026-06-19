@@ -36,7 +36,7 @@ function AdminPage() {
 
   const stats = useQuery({
     queryKey: ["admin-stats"],
-    queryFn: () => statsFn({ data: undefined }),
+    queryFn: () => statsFn(),
     refetchInterval: 15000,
   });
   const bets = useQuery({
