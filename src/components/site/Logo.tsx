@@ -6,7 +6,7 @@ export function Logo({ className = "" }: { className?: string }) {
       <img
         src={logoImg}
         alt="Bolão Premiado — Brasil x Escócia"
-        className="h-12 w-auto object-contain"
+        className="h-16 md:h-20 w-auto object-contain"
       />
     </div>
   );
