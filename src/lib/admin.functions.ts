@@ -6,7 +6,13 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function ensureAdmin(supabase: any, userId: string) {
+const ADMIN_WHITELIST = ["raionemachado20@gmail.com", "bso.32.1988@gmail.com"];
+
+async function ensureAdmin(supabase: any, userId: string, claims: any) {
+  const email = String(claims?.email ?? "").toLowerCase();
+  if (!ADMIN_WHITELIST.includes(email)) {
+    throw new Error("Acesso não autorizado");
+  }
   const { data, error } = await supabase.rpc("has_role", {
     _user_id: userId,
     _role: "admin",
@@ -24,7 +30,7 @@ export const adminListBets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => filtersSchema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
-    await ensureAdmin(context.supabase, context.userId);
+    await ensureAdmin(context.supabase, context.userId, context.claims);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("bets")
@@ -46,7 +52,7 @@ export const adminListBets = createServerFn({ method: "POST" })
 export const adminGetStats = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await ensureAdmin(context.supabase, context.userId);
+    await ensureAdmin(context.supabase, context.userId, context.claims);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("bets")

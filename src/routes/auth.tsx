@@ -19,9 +19,10 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+const ADMIN_WHITELIST = ["raionemachado20@gmail.com", "bso.32.1988@gmail.com"];
+
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,22 +31,22 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email, password,
-          options: { emailRedirectTo: `${window.location.origin}/admin` },
-        });
-        if (error) throw error;
-        toast.success("Conta criada. Verifique seu e-mail e faça login.");
-        setMode("signin");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate({ to: "/admin" });
+      const normalized = email.trim().toLowerCase();
+      if (!ADMIN_WHITELIST.includes(normalized)) {
+        toast.error("Acesso não autorizado");
+        return;
       }
+      const { error } = await supabase.auth.signInWithPassword({
+        email: normalized,
+        password,
+      });
+      if (error) throw error;
+      navigate({ to: "/admin" });
     } catch (e: any) {
       toast.error(e?.message ?? "Erro ao autenticar");
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -69,20 +70,16 @@ function AuthPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" autoComplete={mode === "signin" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+              <Input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
             <Button type="submit" disabled={loading} className="h-11 w-full gradient-bet text-white">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "signin" ? "Entrar" : "Criar conta"}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
             </Button>
           </form>
 
-          <button
-            type="button"
-            onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-foreground"
-          >
-            {mode === "signin" ? "Primeiro acesso? Criar conta" : "Já tem conta? Entrar"}
-          </button>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Cadastro de novos administradores está desabilitado.
+          </p>
         </div>
       </main>
       <Toaster richColors position="top-center" />
