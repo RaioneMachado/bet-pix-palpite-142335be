@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, LogOut, Search } from "lucide-react";
+import { Download, LogOut, Search, Users } from "lucide-react";
 
-import { adminGetStats, adminListBets } from "@/lib/admin.functions";
+import { adminGetStats, adminListBets, adminListAffiliates } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,7 @@ function AdminPage() {
 
   const listFn = useServerFn(adminListBets);
   const statsFn = useServerFn(adminGetStats);
+  const affsFn = useServerFn(adminListAffiliates);
 
   const stats = useQuery({
     queryKey: ["admin-stats"],
@@ -44,6 +45,12 @@ function AdminPage() {
     queryFn: () => listFn({ data: { search, status } }),
     refetchInterval: 15000,
   });
+  const affiliates = useQuery({
+    queryKey: ["admin-affiliates"],
+    queryFn: () => affsFn(),
+    refetchInterval: 30000,
+  });
+
 
   const csv = useMemo(() => buildCsv(bets.data ?? []), [bets.data]);
 
