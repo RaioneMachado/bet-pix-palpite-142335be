@@ -18,7 +18,9 @@ const createBetSchema = z.object({
   scoreBrazil: z.number().int().min(0).max(30),
   scoreScotland: z.number().int().min(0).max(30),
   acceptedTerms: z.literal(true),
+  ref: z.string().trim().max(40).optional(),
 });
+
 
 function isoDateOnly(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -33,6 +35,22 @@ export const createBet = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const asaas = await import("./asaas.server");
 
+    // 0) Resolve código de afiliado (opcional)
+    let affiliateId: string | null = null;
+    let referralCode: string | null = null;
+    if (data.ref) {
+      const code = data.ref.toUpperCase();
+      const { data: aff } = await supabaseAdmin
+        .from("affiliates")
+        .select("id, code")
+        .eq("code", code)
+        .maybeSingle();
+      if (aff) {
+        affiliateId = aff.id;
+        referralCode = aff.code;
+      }
+    }
+
     // 1) Cria registro pendente
     const { data: bet, error: insertErr } = await supabaseAdmin
       .from("bets")
@@ -43,10 +61,13 @@ export const createBet = createServerFn({ method: "POST" })
         score_scotland: data.scoreScotland,
         value: BET_VALUE,
         payment_status: "pending",
+        affiliate_id: affiliateId,
+        referral_code: referralCode,
       })
       .select()
       .single();
     if (insertErr || !bet) throw new Error(insertErr?.message ?? "Falha ao criar aposta");
+
 
     // 2) Cria customer + cobrança PIX no Asaas
     try {
