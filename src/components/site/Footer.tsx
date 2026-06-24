@@ -20,6 +20,8 @@ export function SiteFooter() {
           <Link to="/regulamento" className="block text-muted-foreground hover:text-foreground">Regulamento</Link>
           <Link to="/regulamento" hash="termos" className="block text-muted-foreground hover:text-foreground">Termos de Uso</Link>
           <Link to="/regulamento" hash="privacidade" className="block text-muted-foreground hover:text-foreground">Política de Privacidade</Link>
+          <Link to="/afiliados" className="block text-muted-foreground hover:text-foreground">Seja um afiliado</Link>
+
         </div>
         <div className="space-y-2 text-sm">
           <h4 className="mb-3 font-display text-sm font-semibold">Contato</h4>

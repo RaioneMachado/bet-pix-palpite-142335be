@@ -14,8 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliates: {
+        Row: {
+          code: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bets: {
         Row: {
+          affiliate_id: string | null
           asaas_customer_id: string | null
           created_at: string
           id: string
@@ -26,6 +60,7 @@ export type Database = {
           pix_copy_paste: string | null
           pix_expires_at: string | null
           pix_qr_code: string | null
+          referral_code: string | null
           score_brazil: number
           score_scotland: number
           updated_at: string
@@ -33,6 +68,7 @@ export type Database = {
           whatsapp: string
         }
         Insert: {
+          affiliate_id?: string | null
           asaas_customer_id?: string | null
           created_at?: string
           id?: string
@@ -43,6 +79,7 @@ export type Database = {
           pix_copy_paste?: string | null
           pix_expires_at?: string | null
           pix_qr_code?: string | null
+          referral_code?: string | null
           score_brazil: number
           score_scotland: number
           updated_at?: string
@@ -50,6 +87,7 @@ export type Database = {
           whatsapp: string
         }
         Update: {
+          affiliate_id?: string | null
           asaas_customer_id?: string | null
           created_at?: string
           id?: string
@@ -60,13 +98,22 @@ export type Database = {
           pix_copy_paste?: string | null
           pix_expires_at?: string | null
           pix_qr_code?: string | null
+          referral_code?: string | null
           score_brazil?: number
           score_scotland?: number
           updated_at?: string
           value?: number
           whatsapp?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bets_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -103,7 +150,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin"
+      app_role: "admin" | "affiliate"
       bet_payment_status: "pending" | "confirmed" | "expired" | "cancelled"
     }
     CompositeTypes: {
@@ -232,7 +279,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin"],
+      app_role: ["admin", "affiliate"],
       bet_payment_status: ["pending", "confirmed", "expired", "cancelled"],
     },
   },

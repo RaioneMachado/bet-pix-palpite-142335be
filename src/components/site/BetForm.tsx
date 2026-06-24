@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
@@ -19,6 +19,8 @@ interface PixData {
   expiresAt: string;
 }
 
+const REF_KEY = "bolao_ref";
+
 export function BetForm() {
   const [name, setName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
@@ -26,6 +28,21 @@ export function BetForm() {
   const [scoreScotland, setScoreScotland] = useState(0);
   const [accepted, setAccepted] = useState(false);
   const [pix, setPix] = useState<PixData | null>(null);
+  const [ref, setRef] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const urlRef = params.get("ref");
+    if (urlRef) {
+      const clean = urlRef.trim().toUpperCase().slice(0, 40);
+      localStorage.setItem(REF_KEY, clean);
+      setRef(clean);
+    } else {
+      const stored = localStorage.getItem(REF_KEY);
+      if (stored) setRef(stored);
+    }
+  }, []);
 
   const createFn = useServerFn(createBet);
   const m = useMutation({
@@ -42,8 +59,9 @@ export function BetForm() {
     if (!accepted) { toast.error("Você precisa aceitar o regulamento."); return; }
     if (name.trim().length < 2) { toast.error("Informe seu nome completo."); return; }
     if (whatsapp.replace(/\D/g, "").length < 10) { toast.error("WhatsApp inválido."); return; }
-    m.mutate({ data: { name: name.trim(), whatsapp, scoreBrazil, scoreScotland, acceptedTerms: true } });
+    m.mutate({ data: { name: name.trim(), whatsapp, scoreBrazil, scoreScotland, acceptedTerms: true, ref: ref ?? undefined } });
   };
+
 
   if (!open) {
     return (

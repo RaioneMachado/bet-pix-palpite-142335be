@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, LogOut, Search } from "lucide-react";
+import { Download, LogOut, Search, Users } from "lucide-react";
 
-import { adminGetStats, adminListBets } from "@/lib/admin.functions";
+import { adminGetStats, adminListBets, adminListAffiliates } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,7 @@ function AdminPage() {
 
   const listFn = useServerFn(adminListBets);
   const statsFn = useServerFn(adminGetStats);
+  const affsFn = useServerFn(adminListAffiliates);
 
   const stats = useQuery({
     queryKey: ["admin-stats"],
@@ -44,6 +45,12 @@ function AdminPage() {
     queryFn: () => listFn({ data: { search, status } }),
     refetchInterval: 15000,
   });
+  const affiliates = useQuery({
+    queryKey: ["admin-affiliates"],
+    queryFn: () => affsFn(),
+    refetchInterval: 30000,
+  });
+
 
   const csv = useMemo(() => buildCsv(bets.data ?? []), [bets.data]);
 
@@ -104,6 +111,7 @@ function AdminPage() {
                   <th className="px-4 py-3">Placar</th>
                   <th className="px-4 py-3">Valor</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Afiliado</th>
                   <th className="px-4 py-3">Pagamento Asaas</th>
                   <th className="px-4 py-3">Criada em</th>
                   <th className="px-4 py-3">Pago em</th>
@@ -111,21 +119,78 @@ function AdminPage() {
               </thead>
               <tbody>
                 {bets.isLoading && (
-                  <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">Carregando…</td></tr>
+                  <tr><td colSpan={9} className="p-8 text-center text-muted-foreground">Carregando…</td></tr>
                 )}
                 {!bets.isLoading && (bets.data?.length ?? 0) === 0 && (
-                  <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">Nenhuma aposta encontrada.</td></tr>
+                  <tr><td colSpan={9} className="p-8 text-center text-muted-foreground">Nenhuma aposta encontrada.</td></tr>
                 )}
-                {bets.data?.map((b) => (
+                {bets.data?.map((b: any) => (
                   <tr key={b.id} className="border-t border-border hover:bg-muted/30">
                     <td className="px-4 py-3 font-medium">{b.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{b.whatsapp}</td>
                     <td className="px-4 py-3 font-bold tabular-nums">{b.score_brazil} × {b.score_scotland}</td>
                     <td className="px-4 py-3 tabular-nums">R$ {Number(b.value).toFixed(2)}</td>
                     <td className="px-4 py-3"><StatusBadge status={b.payment_status} /></td>
+                    <td className="px-4 py-3 text-xs">
+                      {b.affiliate_name ? (
+                        <span className="inline-flex flex-col">
+                          <span className="font-medium">{b.affiliate_name}</span>
+                          <span className="font-mono text-[10px] text-muted-foreground">{b.referral_code}</span>
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Direto</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 font-mono text-[11px] text-muted-foreground">{b.payment_id ?? "—"}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{fmt(b.created_at)}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{b.paid_at ? fmt(b.paid_at) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card shadow-soft">
+          <div className="flex items-center gap-2 border-b border-border p-4">
+            <Users className="h-4 w-4" />
+            <h2 className="font-semibold">Afiliados cadastrados</h2>
+            <span className="ml-auto text-xs text-muted-foreground">
+              {affiliates.data?.length ?? 0} no total
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/60 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3">Nome</th>
+                  <th className="px-4 py-3">E-mail</th>
+                  <th className="px-4 py-3">Telefone</th>
+                  <th className="px-4 py-3">Código</th>
+                  <th className="px-4 py-3">Vendas confirmadas</th>
+                  <th className="px-4 py-3">Arrecadado</th>
+                  <th className="px-4 py-3">Comissão (50%)</th>
+                  <th className="px-4 py-3">Cadastro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(affiliates.data?.length ?? 0) === 0 && (
+                  <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">
+                    Nenhum afiliado cadastrado ainda.
+                  </td></tr>
+                )}
+                {affiliates.data?.map((a: any) => (
+                  <tr key={a.id} className="border-t border-border hover:bg-muted/30">
+                    <td className="px-4 py-3 font-medium">{a.name}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{a.phone}</td>
+                    <td className="px-4 py-3 font-mono text-xs">{a.code}</td>
+                    <td className="px-4 py-3 tabular-nums">{a.sales}</td>
+                    <td className="px-4 py-3 tabular-nums">R$ {Number(a.grossBRL).toFixed(2)}</td>
+                    <td className="px-4 py-3 tabular-nums font-semibold text-amarelo-foreground">
+                      R$ {Number(a.commissionBRL).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{fmt(a.created_at)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -137,6 +202,7 @@ function AdminPage() {
     </div>
   );
 }
+
 
 function StatCard({ label, value, accent }: { label: string; value: React.ReactNode; accent?: "success" | "warn" | "brand" }) {
   const ring =
