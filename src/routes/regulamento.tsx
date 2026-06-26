@@ -2,14 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { SiteHeader } from "@/components/site/Header";
 import { SiteFooter } from "@/components/site/Footer";
-import { MATCH } from "@/lib/match-config";
 
 export const Route = createFileRoute("/regulamento")({
   head: () => ({
     meta: [
-      { title: "Regulamento — Bolão Brasil x Escócia" },
-      { name: "description", content: "Regulamento, termos de uso e política de privacidade do bolão Brasil x Escócia." },
-      { property: "og:title", content: "Regulamento — Bolão Brasil x Escócia" },
+      { title: "Regulamento — Bolão Premiado" },
+      { name: "description", content: "Regulamento, termos de uso e política de privacidade do bolão." },
+      { property: "og:title", content: "Regulamento — Bolão Premiado" },
       { property: "og:description", content: "Regras completas, critérios de desempate e premiação." },
     ],
   }),
@@ -22,11 +21,11 @@ function RegulamentoPage() {
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-4 py-12">
         <h1 className="font-display text-4xl font-extrabold tracking-tight">Regulamento</h1>
-        <p className="mt-2 text-muted-foreground">Bolão Brasil x Escócia — {MATCH.displayDate}, às {MATCH.displayTime}.</p>
+        <p className="mt-2 text-muted-foreground">Regras do bolão — válidas para todas as partidas listadas na página inicial.</p>
 
         <article className="prose prose-slate mt-8 max-w-none space-y-6 text-[15px] leading-relaxed">
           <Section title="1. Como funciona">
-            <p>O participante escolhe o placar exato da partida Brasil x Escócia, informa nome e WhatsApp e realiza o pagamento via PIX no valor de R$ 20,00.</p>
+            <p>O participante escolhe o placar exato da partida desejada na página inicial, informa nome e WhatsApp e realiza o pagamento via PIX no valor de R$ 20,00 por aposta.</p>
           </Section>
 
           <Section title="2. Valor da aposta">
@@ -34,7 +33,7 @@ function RegulamentoPage() {
           </Section>
 
           <Section title="3. Data limite">
-            <p>As apostas encerram automaticamente em <strong>24/06 às 18:30</strong> (horário de Brasília). Após esse horário não será mais possível realizar palpites.</p>
+            <p>Cada partida exibe seu próprio cronômetro. As apostas encerram automaticamente 30 minutos antes do início do jogo. Após esse horário não será mais possível palpitar nessa partida.</p>
           </Section>
 
           <Section title="4. Forma de pagamento">

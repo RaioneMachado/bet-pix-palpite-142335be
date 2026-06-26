@@ -5,22 +5,20 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { MATCH, isBettingOpen } from "./match-config";
-
-const BET_VALUE = MATCH.betPriceBRL;
+import { BET_PRICE_BRL, PIX_EXPIRY_MINUTES, isBettingOpenFor } from "./match-config";
 
 const createBetSchema = z.object({
+  matchId: z.string().uuid(),
   name: z.string().trim().min(2, "Nome muito curto").max(120),
   whatsapp: z
     .string()
     .trim()
     .regex(/^[\d\s().+-]{10,20}$/, "WhatsApp inválido"),
-  scoreBrazil: z.number().int().min(0).max(30),
-  scoreScotland: z.number().int().min(0).max(30),
+  scoreHome: z.number().int().min(0).max(30),
+  scoreAway: z.number().int().min(0).max(30),
   acceptedTerms: z.literal(true),
   ref: z.string().trim().max(40).optional(),
 });
-
 
 function isoDateOnly(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -29,13 +27,19 @@ function isoDateOnly(d: Date) {
 export const createBet = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => createBetSchema.parse(data))
   .handler(async ({ data }) => {
-    if (!isBettingOpen()) {
-      throw new Error("As apostas foram encerradas.");
-    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const asaas = await import("./asaas.server");
 
-    // 0) Resolve código de afiliado (opcional)
+    const { data: match, error: matchErr } = await supabaseAdmin
+      .from("matches")
+      .select("id, home_team, away_team, betting_closes_at, active")
+      .eq("id", data.matchId)
+      .maybeSingle();
+    if (matchErr || !match) throw new Error("Partida não encontrada");
+    if (!match.active) throw new Error("Esta partida não está mais aceitando apostas.");
+    if (!isBettingOpenFor(match)) throw new Error("As apostas desta partida foram encerradas.");
+
+    // Resolve código de afiliado (opcional)
     let affiliateId: string | null = null;
     let referralCode: string | null = null;
     if (data.ref) {
@@ -51,15 +55,15 @@ export const createBet = createServerFn({ method: "POST" })
       }
     }
 
-    // 1) Cria registro pendente
     const { data: bet, error: insertErr } = await supabaseAdmin
       .from("bets")
       .insert({
+        match_id: match.id,
         name: data.name,
         whatsapp: data.whatsapp,
-        score_brazil: data.scoreBrazil,
-        score_scotland: data.scoreScotland,
-        value: BET_VALUE,
+        score_brazil: data.scoreHome,
+        score_scotland: data.scoreAway,
+        value: BET_PRICE_BRL,
         payment_status: "pending",
         affiliate_id: affiliateId,
         referral_code: referralCode,
@@ -68,15 +72,13 @@ export const createBet = createServerFn({ method: "POST" })
       .single();
     if (insertErr || !bet) throw new Error(insertErr?.message ?? "Falha ao criar aposta");
 
-
-    // 2) Cria customer + cobrança PIX no Asaas
     try {
       const customer = await asaas.createCustomer({ name: data.name, whatsapp: data.whatsapp });
-      const dueDate = new Date(Date.now() + MATCH.pixExpiryMinutes * 60 * 1000);
+      const dueDate = new Date(Date.now() + PIX_EXPIRY_MINUTES * 60 * 1000);
       const payment = await asaas.createPixCharge({
         customerId: customer.id,
-        value: BET_VALUE,
-        description: `Bolão ${MATCH.homeTeam} x ${MATCH.awayTeam}`,
+        value: BET_PRICE_BRL,
+        description: `Bolão ${match.home_team} x ${match.away_team}`,
         externalReference: bet.id,
         dueDateISO: isoDateOnly(dueDate),
       });
@@ -97,7 +99,7 @@ export const createBet = createServerFn({ method: "POST" })
       return {
         betId: bet.id,
         paymentId: payment.id,
-        value: BET_VALUE,
+        value: BET_PRICE_BRL,
         qrCodeBase64: qr.encodedImage,
         copyPaste: qr.payload,
         expiresAt: qr.expirationDate ?? dueDate.toISOString(),
@@ -114,18 +116,17 @@ export const getBetStatus = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: bet, error } = await supabaseAdmin
       .from("bets")
-      .select("id, payment_status, payment_id, pix_expires_at, paid_at")
+      .select("id, payment_status, payment_id, pix_expires_at, paid_at, value")
       .eq("id", data.betId)
       .single();
     if (error || !bet) throw new Error("Aposta não encontrada");
 
-    // Reconciliação preguiçosa: se ainda pendente, consulta Asaas
     if (bet.payment_status === "pending" && bet.payment_id) {
       try {
         const asaas = await import("./asaas.server");
         const payment = await asaas.getPayment(bet.payment_id);
         const status = mapAsaasStatus(payment.status);
-        if (status === "confirmed" && Number(payment.value) === BET_VALUE) {
+        if (status === "confirmed" && Number(payment.value) === Number(bet.value)) {
           await supabaseAdmin
             .from("bets")
             .update({ payment_status: "confirmed", paid_at: new Date().toISOString() })
@@ -151,27 +152,31 @@ export const getBetStatus = createServerFn({ method: "POST" })
 export const regeneratePix = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => z.object({ betId: z.string().uuid() }).parse(data))
   .handler(async ({ data }) => {
-    if (!isBettingOpen()) throw new Error("As apostas foram encerradas.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const asaas = await import("./asaas.server");
 
     const { data: bet, error } = await supabaseAdmin
       .from("bets")
-      .select("*")
+      .select("*, matches(home_team, away_team, betting_closes_at, active)")
       .eq("id", data.betId)
       .single();
     if (error || !bet) throw new Error("Aposta não encontrada");
     if (bet.payment_status === "confirmed") throw new Error("Pagamento já confirmado");
 
+    const match: any = (bet as any).matches;
+    if (match && (!match.active || !isBettingOpenFor(match))) {
+      throw new Error("As apostas desta partida foram encerradas.");
+    }
+
     const customerId =
       bet.asaas_customer_id ??
       (await asaas.createCustomer({ name: bet.name, whatsapp: bet.whatsapp })).id;
 
-    const dueDate = new Date(Date.now() + MATCH.pixExpiryMinutes * 60 * 1000);
+    const dueDate = new Date(Date.now() + PIX_EXPIRY_MINUTES * 60 * 1000);
     const payment = await asaas.createPixCharge({
       customerId,
-      value: BET_VALUE,
-      description: `Bolão ${MATCH.homeTeam} x ${MATCH.awayTeam}`,
+      value: Number(bet.value),
+      description: match ? `Bolão ${match.home_team} x ${match.away_team}` : `Bolão`,
       externalReference: bet.id,
       dueDateISO: isoDateOnly(dueDate),
     });
@@ -192,7 +197,7 @@ export const regeneratePix = createServerFn({ method: "POST" })
     return {
       betId: bet.id,
       paymentId: payment.id,
-      value: BET_VALUE,
+      value: Number(bet.value),
       qrCodeBase64: qr.encodedImage,
       copyPaste: qr.payload,
       expiresAt: qr.expirationDate ?? dueDate.toISOString(),
