@@ -65,7 +65,7 @@ export const Route = createFileRoute("/api/public/asaas-webhook")({
         if (bet.payment_status === "confirmed") return new Response("already confirmed", { status: 200 });
 
         if (isPaid) {
-          if (Number(payment.value) !== MATCH.betPriceBRL) {
+          if (Number(payment.value) !== Number(bet.value)) {
             console.error("[webhook] valor divergente", payment.value);
             return new Response("invalid amount", { status: 400 });
           }
