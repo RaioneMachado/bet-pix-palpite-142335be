@@ -51,8 +51,10 @@ export type Database = {
         Row: {
           affiliate_id: string | null
           asaas_customer_id: string | null
+          commission_paid_at: string | null
           created_at: string
           id: string
+          match_id: string | null
           name: string
           paid_at: string | null
           payment_id: string | null
@@ -70,8 +72,10 @@ export type Database = {
         Insert: {
           affiliate_id?: string | null
           asaas_customer_id?: string | null
+          commission_paid_at?: string | null
           created_at?: string
           id?: string
+          match_id?: string | null
           name: string
           paid_at?: string | null
           payment_id?: string | null
@@ -89,8 +93,10 @@ export type Database = {
         Update: {
           affiliate_id?: string | null
           asaas_customer_id?: string | null
+          commission_paid_at?: string | null
           created_at?: string
           id?: string
+          match_id?: string | null
           name?: string
           paid_at?: string | null
           payment_id?: string | null
@@ -113,7 +119,68 @@ export type Database = {
             referencedRelation: "affiliates"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bets_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      matches: {
+        Row: {
+          active: boolean
+          away_score: number | null
+          away_team: string
+          betting_closes_at: string
+          created_at: string
+          display_date: string
+          display_time: string
+          home_score: number | null
+          home_team: string
+          id: string
+          image_url: string
+          kickoff: string
+          position: number
+          result_set_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          away_score?: number | null
+          away_team: string
+          betting_closes_at: string
+          created_at?: string
+          display_date: string
+          display_time: string
+          home_score?: number | null
+          home_team: string
+          id?: string
+          image_url: string
+          kickoff: string
+          position?: number
+          result_set_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          away_score?: number | null
+          away_team?: string
+          betting_closes_at?: string
+          created_at?: string
+          display_date?: string
+          display_time?: string
+          home_score?: number | null
+          home_team?: string
+          id?: string
+          image_url?: string
+          kickoff?: string
+          position?: number
+          result_set_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
