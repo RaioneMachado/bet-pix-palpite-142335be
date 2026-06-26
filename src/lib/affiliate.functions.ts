@@ -119,16 +119,32 @@ export const getMyReferrals = createServerFn({ method: "POST" })
     // RLS já restringe a apostas confirmadas com affiliate_id deste usuário.
     const { data, error } = await context.supabase
       .from("bets")
-      .select("id, name, whatsapp, score_brazil, score_scotland, value, paid_at, created_at")
+      .select("id, name, whatsapp, score_brazil, score_scotland, value, paid_at, created_at, commission_paid_at, matches(home_team, away_team)")
       .eq("payment_status", "confirmed")
       .order("paid_at", { ascending: false })
       .limit(1000);
     if (error) throw new Error(error.message);
-    const rows = data ?? [];
+    const rows = (data ?? []).map((r: any) => ({
+      ...r,
+      match_home: r.matches?.home_team ?? null,
+      match_away: r.matches?.away_team ?? null,
+    }));
     const totalSales = rows.length;
     const grossBRL = rows.reduce((s, r) => s + Number(r.value || 0), 0);
-    const commissionBRL = grossBRL * 0.5;
-    return { rows, totalSales, grossBRL, commissionBRL };
+    const pendingBRL = rows
+      .filter((r) => !r.commission_paid_at)
+      .reduce((s, r) => s + Number(r.value || 0), 0) * 0.5;
+    const paidBRL = rows
+      .filter((r) => r.commission_paid_at)
+      .reduce((s, r) => s + Number(r.value || 0), 0) * 0.5;
+    return {
+      rows,
+      totalSales,
+      grossBRL,
+      commissionBRL: grossBRL * 0.5,
+      pendingCommissionBRL: pendingBRL,
+      paidCommissionBRL: paidBRL,
+    };
   });
 
 /**
