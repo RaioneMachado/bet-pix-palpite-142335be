@@ -1,21 +1,27 @@
 /**
- * Configuração da partida — fonte única da verdade.
- * Datas em UTC (BRT é UTC-3).
- *
- * Partida: 24/06/2026 às 19:00 BRT  -> 22:00 UTC
- * Apostas encerram: 24/06/2026 às 18:30 BRT -> 21:30 UTC
+ * Configuração compartilhada de partidas.
+ * Os dados vivem agora na tabela public.matches; este arquivo expõe apenas
+ * constantes globais (preço, prêmio, expiração do PIX) e tipos.
  */
-export const MATCH = {
-  homeTeam: "Brasil",
-  awayTeam: "Escócia",
-  kickoff: "2026-06-24T22:00:00Z",
-  bettingClosesAt: "2026-06-24T21:30:00Z",
-  displayDate: "24 de junho",
-  displayTime: "19:00",
-  betPriceBRL: 20,
-  prizeBRL: 1000,
-  pixExpiryMinutes: 30,
-} as const;
+export const BET_PRICE_BRL = 20;
+export const PRIZE_BRL = 1000;
+export const PIX_EXPIRY_MINUTES = 30;
 
-export const isBettingOpen = (now = new Date()) =>
-  now.getTime() < new Date(MATCH.bettingClosesAt).getTime();
+export type Match = {
+  id: string;
+  home_team: string;
+  away_team: string;
+  kickoff: string;
+  betting_closes_at: string;
+  display_date: string;
+  display_time: string;
+  image_url: string;
+  home_score: number | null;
+  away_score: number | null;
+  result_set_at: string | null;
+  position: number;
+  active: boolean;
+};
+
+export const isBettingOpenFor = (m: Pick<Match, "betting_closes_at">, now = new Date()) =>
+  now.getTime() < new Date(m.betting_closes_at).getTime();
