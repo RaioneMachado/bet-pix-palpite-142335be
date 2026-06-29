@@ -69,18 +69,9 @@ export function PixModal({ data, onClose }: { data: PixData; onClose: () => void
             <h3 className="font-display text-2xl font-bold">Parabéns e boa sorte! 🎉</h3>
             <p className="text-sm text-muted-foreground">
               Seu pagamento foi confirmado e sua aposta registrada com sucesso.
-              Entre agora no nosso grupo de WhatsApp para acompanhar tudo em tempo real:
-              resultados, novidades e próximos bolões.
+              Se você ganhar, entraremos em contato.
             </p>
-            <a
-              href="https://chat.whatsapp.com/E7hxuInbFrw39TjBfav70B"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex w-full items-center justify-center rounded-md bg-[#25D366] px-4 py-3 font-semibold text-white shadow hover:bg-[#1ebe5b] transition"
-            >
-              Entrar no grupo do WhatsApp
-            </a>
-            <Button onClick={onClose} variant="outline" className="mt-2 w-full">Fechar</Button>
+            <Button onClick={onClose} variant="outline" className="w-full">Fechar</Button>
           </div>
         ) : (
           <div className="p-6 sm:p-8">
