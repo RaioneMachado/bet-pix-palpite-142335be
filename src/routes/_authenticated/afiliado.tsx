@@ -107,10 +107,10 @@ function AffiliateDashboard() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Vendas confirmadas" value={stats?.totalSales ?? "—"} />
+          <StatCard label="Total de vendas" value={stats?.totalSales ?? "—"} />
           <StatCard
-            label="Total arrecadado"
-            value={stats ? `R$ ${stats.grossBRL.toFixed(2)}` : "—"}
+            label="Vendas confirmadas"
+            value={stats?.confirmedSales ?? "—"}
           />
           <StatCard
             label="Sua comissão (50%)"
@@ -133,8 +133,8 @@ function AffiliateDashboard() {
                   <th className="px-4 py-3">WhatsApp</th>
                   <th className="px-4 py-3">Palpite</th>
                   <th className="px-4 py-3">Valor</th>
+                  <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Sua comissão</th>
-                  <th className="px-4 py-3">Pago em</th>
                 </tr>
               </thead>
               <tbody>
@@ -143,7 +143,7 @@ function AffiliateDashboard() {
                 )}
                 {!refs.isLoading && (stats?.rows.length ?? 0) === 0 && (
                   <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">
-                    Nenhuma venda confirmada ainda. Compartilhe seu link!
+                    Nenhuma venda ainda. Compartilhe seu link!
                   </td></tr>
                 )}
                 {stats?.rows.map((b: any) => (
@@ -152,11 +152,9 @@ function AffiliateDashboard() {
                     <td className="px-4 py-3 text-muted-foreground">{b.whatsapp}</td>
                     <td className="px-4 py-3 font-bold tabular-nums">{b.score_brazil} × {b.score_scotland}</td>
                     <td className="px-4 py-3 tabular-nums">R$ {Number(b.value).toFixed(2)}</td>
+                    <td className="px-4 py-3">{statusBadge(b.payment_status)}</td>
                     <td className="px-4 py-3 tabular-nums font-semibold text-success">
-                      R$ {(Number(b.value) * 0.5).toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {b.paid_at ? new Date(b.paid_at).toLocaleString("pt-BR") : "—"}
+                      {b.payment_status === "confirmed" ? `R$ ${(Number(b.value) * 0.5).toFixed(2)}` : "—"}
                     </td>
                   </tr>
                 ))}
