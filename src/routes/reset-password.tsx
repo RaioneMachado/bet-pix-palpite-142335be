@@ -26,13 +26,63 @@ function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    // Supabase recovery link sets a session via the URL hash automatically.
-    // Wait for either an existing session or the PASSWORD_RECOVERY event.
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted && data.session) setReady(true);
-    });
+
+    const init = async () => {
+      try {
+        const url = new URL(window.location.href);
+        const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const code = url.searchParams.get("code");
+        const tokenHash = url.searchParams.get("token_hash") ?? hash.get("token_hash");
+        const type = (url.searchParams.get("type") ?? hash.get("type")) as
+          | "recovery"
+          | null;
+        const accessToken = hash.get("access_token");
+        const refreshToken = hash.get("refresh_token");
+        const errDesc = url.searchParams.get("error_description") ?? hash.get("error_description");
+
+        if (errDesc) throw new Error(errDesc);
+
+        // PKCE flow: ?code=...
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+        }
+        // OTP token_hash flow
+        else if (tokenHash) {
+          const { error } = await supabase.auth.verifyOtp({
+            type: type ?? "recovery",
+            token_hash: tokenHash,
+          });
+          if (error) throw error;
+        }
+        // Legacy implicit flow with access_token in hash
+        else if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) throw error;
+        }
+
+        // Clean URL so refresh doesn't try to re-consume the code
+        if (code || tokenHash || accessToken) {
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+
+        const { data } = await supabase.auth.getSession();
+        if (mounted && data.session) setReady(true);
+        else if (mounted) setError("Link inválido ou expirado. Solicite um novo link.");
+      } catch (e: any) {
+        if (mounted) setError(e?.message ?? "Link inválido ou expirado.");
+      }
+    };
+
+    void init();
+
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
@@ -85,9 +135,16 @@ function ResetPasswordPage() {
 
           {!ready ? (
             <div className="space-y-3 text-center text-sm text-muted-foreground">
-              <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+              {error ? (
+                <p className="text-destructive">{error}</p>
+              ) : (
+                <>
+                  <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                  <p>Validando link de redefinição…</p>
+                </>
+              )}
               <p>
-                Abra esta página pelo link enviado ao seu e-mail. Se você já clicou no link e ainda vê esta mensagem, peça um novo link em{" "}
+                Solicite um novo link em{" "}
                 <Link to="/afiliados" className="underline">afiliados</Link>.
               </p>
             </div>
