@@ -135,9 +135,16 @@ function ResetPasswordPage() {
 
           {!ready ? (
             <div className="space-y-3 text-center text-sm text-muted-foreground">
-              <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+              {error ? (
+                <p className="text-destructive">{error}</p>
+              ) : (
+                <>
+                  <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                  <p>Validando link de redefinição…</p>
+                </>
+              )}
               <p>
-                Abra esta página pelo link enviado ao seu e-mail. Se você já clicou no link e ainda vê esta mensagem, peça um novo link em{" "}
+                Solicite um novo link em{" "}
                 <Link to="/afiliados" className="underline">afiliados</Link>.
               </p>
             </div>
