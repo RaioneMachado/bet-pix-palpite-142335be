@@ -116,12 +116,10 @@ export const getMyReferrals = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await ensureAffiliate(context.supabase, context.userId);
-    // RLS já restringe a apostas confirmadas com affiliate_id deste usuário.
     const { data, error } = await context.supabase
       .from("bets")
-      .select("id, name, whatsapp, score_brazil, score_scotland, value, paid_at, created_at, commission_paid_at, matches(home_team, away_team)")
-      .eq("payment_status", "confirmed")
-      .order("paid_at", { ascending: false })
+      .select("id, name, whatsapp, score_brazil, score_scotland, value, paid_at, created_at, commission_paid_at, payment_status, matches(home_team, away_team)")
+      .order("created_at", { ascending: false })
       .limit(1000);
     if (error) throw new Error(error.message);
     const rows = (data ?? []).map((r: any) => ({
@@ -130,20 +128,24 @@ export const getMyReferrals = createServerFn({ method: "POST" })
       match_away: r.matches?.away_team ?? null,
     }));
     const totalSales = rows.length;
-    const grossBRL = rows.reduce((s, r) => s + Number(r.value || 0), 0);
-    const pendingBRL = rows
-      .filter((r) => !r.commission_paid_at)
+    const confirmedRows = rows.filter((r: any) => r.payment_status === "confirmed");
+    const confirmedSales = confirmedRows.length;
+    const pendingSales = rows.filter((r: any) => r.payment_status === "pending").length;
+    const grossBRL = confirmedRows.reduce((s, r) => s + Number(r.value || 0), 0);
+    const pendingCommissionBRL = confirmedRows
+      .filter((r: any) => !r.commission_paid_at)
       .reduce((s, r) => s + Number(r.value || 0), 0) * 0.5;
-    const paidBRL = rows
-      .filter((r) => r.commission_paid_at)
+    const paidCommissionBRL = confirmedRows
+      .filter((r: any) => r.commission_paid_at)
       .reduce((s, r) => s + Number(r.value || 0), 0) * 0.5;
     return {
       rows,
       totalSales,
-      grossBRL,
+      confirmedSales,
+      pendingSales,
       commissionBRL: grossBRL * 0.5,
-      pendingCommissionBRL: pendingBRL,
-      paidCommissionBRL: paidBRL,
+      pendingCommissionBRL,
+      paidCommissionBRL,
     };
   });
 
