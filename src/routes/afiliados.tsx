@@ -42,7 +42,32 @@ function AffiliatesPage() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loadingLogin, setLoadingLogin] = useState(false);
 
+  // forgot password
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [loadingForgot, setLoadingForgot] = useState(false);
+
   const signupFn = useServerFn(affiliateSignup);
+
+  const onForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = forgotEmail.trim().toLowerCase();
+    if (!target) return;
+    setLoadingForgot(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(target, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Enviamos um link para o seu e-mail. Verifique sua caixa de entrada.");
+      setForgotOpen(false);
+      setForgotEmail("");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao enviar o link");
+    } finally {
+      setLoadingForgot(false);
+    }
+  };
 
   const onSignup = async (e: React.FormEvent) => {
     e.preventDefault();
