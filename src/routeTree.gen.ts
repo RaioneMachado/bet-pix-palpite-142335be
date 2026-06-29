@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegulamentoRouteImport } from './routes/regulamento'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AfiliadosRouteImport } from './routes/afiliados'
@@ -22,6 +23,11 @@ import { Route as ApiPublicAsaasWebhookRouteImport } from './routes/api/public/a
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegulamentoRoute = RegulamentoRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/afiliados': typeof AfiliadosRoute
   '/auth': typeof AuthRoute
   '/regulamento': typeof RegulamentoRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/afiliado': typeof AuthenticatedAfiliadoRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByTo {
   '/afiliados': typeof AfiliadosRoute
   '/auth': typeof AuthRoute
   '/regulamento': typeof RegulamentoRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/afiliado': typeof AuthenticatedAfiliadoRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   '/afiliados': typeof AfiliadosRoute
   '/auth': typeof AuthRoute
   '/regulamento': typeof RegulamentoRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/afiliado': typeof AuthenticatedAfiliadoRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
     | '/afiliados'
     | '/auth'
     | '/regulamento'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/admin'
     | '/afiliado'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
     | '/afiliados'
     | '/auth'
     | '/regulamento'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/admin'
     | '/afiliado'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/afiliados'
     | '/auth'
     | '/regulamento'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/_authenticated/admin'
     | '/_authenticated/afiliado'
@@ -136,6 +148,7 @@ export interface RootRouteChildren {
   AfiliadosRoute: typeof AfiliadosRoute
   AuthRoute: typeof AuthRoute
   RegulamentoRoute: typeof RegulamentoRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicAsaasWebhookRoute: typeof ApiPublicAsaasWebhookRoute
 }
@@ -147,6 +160,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/regulamento': {
@@ -227,6 +247,7 @@ const rootRouteChildren: RootRouteChildren = {
   AfiliadosRoute: AfiliadosRoute,
   AuthRoute: AuthRoute,
   RegulamentoRoute: RegulamentoRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicAsaasWebhookRoute: ApiPublicAsaasWebhookRoute,
 }

@@ -42,7 +42,32 @@ function AffiliatesPage() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loadingLogin, setLoadingLogin] = useState(false);
 
+  // forgot password
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [loadingForgot, setLoadingForgot] = useState(false);
+
   const signupFn = useServerFn(affiliateSignup);
+
+  const onForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = forgotEmail.trim().toLowerCase();
+    if (!target) return;
+    setLoadingForgot(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(target, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Enviamos um link para o seu e-mail. Verifique sua caixa de entrada.");
+      setForgotOpen(false);
+      setForgotEmail("");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao enviar o link");
+    } finally {
+      setLoadingForgot(false);
+    }
+  };
 
   const onSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,13 +166,50 @@ function AffiliatesPage() {
                   <Input id="l-email" type="email" autoComplete="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="l-pass">Senha</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="l-pass">Senha</Label>
+                    <button
+                      type="button"
+                      onClick={() => { setForgotEmail(loginEmail); setForgotOpen((v) => !v); }}
+                      className="text-xs text-primary underline-offset-2 hover:underline"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
                   <Input id="l-pass" type="password" autoComplete="current-password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required minLength={6} />
                 </div>
                 <Button type="submit" disabled={loadingLogin} className="h-11 w-full gradient-bet text-white">
                   {loadingLogin ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
                 </Button>
               </form>
+
+              {forgotOpen && (
+                <form onSubmit={onForgot} className="mt-4 space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="f-email" className="text-sm">Recuperar acesso</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Informe o e-mail da sua conta de afiliado e enviaremos um link para criar uma nova senha.
+                    </p>
+                  </div>
+                  <Input
+                    id="f-email"
+                    type="email"
+                    autoComplete="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                    required
+                  />
+                  <div className="flex gap-2">
+                    <Button type="submit" disabled={loadingForgot} className="h-10 flex-1 gradient-bet text-white">
+                      {loadingForgot ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar link"}
+                    </Button>
+                    <Button type="button" variant="outline" className="h-10" onClick={() => setForgotOpen(false)}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </form>
+              )}
             </TabsContent>
           </Tabs>
 
