@@ -168,6 +168,21 @@ function AffiliateDashboard() {
   );
 }
 
+function statusBadge(status: string) {
+  switch (status) {
+    case "confirmed":
+      return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Confirmada</Badge>;
+    case "pending":
+      return <Badge variant="secondary">Pendente</Badge>;
+    case "expired":
+      return <Badge variant="outline">Expirada</Badge>;
+    case "cancelled":
+      return <Badge variant="destructive">Cancelada</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
+  }
+}
+
 function StatCard({ label, value, accent }: { label: string; value: React.ReactNode; accent?: boolean }) {
   return (
     <div className={`rounded-2xl border border-border bg-card p-5 shadow-soft ${accent ? "ring-1 ring-success/40 bg-success/5" : ""}`}>
