@@ -18,7 +18,7 @@ export function SiteHeader() {
             href="#aposta"
             className="ml-1 hidden rounded-lg gradient-bet px-4 py-2 text-sm font-semibold text-white shadow-soft transition hover:opacity-95 sm:inline-flex"
           >
-            Apostar agora
+            APOSTAR
           </a>
         </nav>
       </div>

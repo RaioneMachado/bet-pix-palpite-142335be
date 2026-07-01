@@ -141,7 +141,7 @@ export function BetForm({ match }: { match: Match }) {
           {m.isPending ? (
             <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Gerando PIX…</>
           ) : (
-            `Apostar em ${match.home_team} x ${match.away_team} — R$ ${BET_PRICE_BRL.toFixed(2)}`
+            "APOSTAR"
           )}
         </Button>
       </form>
